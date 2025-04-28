@@ -1,0 +1,81 @@
+import javax.swing.*;
+import java.awt.*;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+
+public class WmicInfoFetcherGUI {
+
+    public static void main(String[] args) {
+        // Create the main frame
+        JFrame frame = new JFrame("WMIC Info Fetcher");
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setSize(600, 400);
+        frame.setLayout(new BorderLayout());
+
+        // Create text areas for displaying information
+        JTextArea baseboardInfoArea = new JTextArea(10, 50);
+        baseboardInfoArea.setEditable(false);
+        baseboardInfoArea.setBorder(BorderFactory.createTitledBorder("Baseboard Information"));
+
+        JTextArea cpuInfoArea = new JTextArea(10, 50);
+        cpuInfoArea.setEditable(false);
+        cpuInfoArea.setBorder(BorderFactory.createTitledBorder("CPU Information"));
+
+        // Create buttons to fetch information
+        JButton fetchBaseboardButton = new JButton("Fetch Baseboard Info");
+        JButton fetchCpuButton = new JButton("Fetch CPU Info");
+        JButton fetchMemoryButton = new JButton("Fetch Memory Info");
+        JButton fetchOsButton = new JButton("Fetch OS Info");
+
+        // Add action listeners to buttons
+        fetchBaseboardButton.addActionListener(e -> {
+            String result = executeWmicCommand("wmic baseboard get Manufacturer,Product,SerialNumber,Version");
+            baseboardInfoArea.setText(result);
+        });
+
+        fetchCpuButton.addActionListener(e -> {
+            String result = executeWmicCommand("wmic cpu get Name,Manufacturer,NumberOfCores,MaxClockSpeed");
+            cpuInfoArea.setText(result);
+        });
+
+        fetchMemoryButton.addActionListener(e -> {
+            String result = executeWmicCommand("wmic memorychip get Capacity,Manufacturer,Speed");
+            baseboardInfoArea.setText(result);
+        });
+
+        fetchOsButton.addActionListener(e -> {
+            String result = executeWmicCommand("wmic os get Caption,Version,OSArchitecture");
+            cpuInfoArea.setText(result);
+        });
+
+        // Add components to the frame
+        JPanel buttonPanel = new JPanel();
+        buttonPanel.add(fetchBaseboardButton);
+        buttonPanel.add(fetchCpuButton);
+        buttonPanel.add(fetchMemoryButton);
+        buttonPanel.add(fetchOsButton);
+
+        frame.add(buttonPanel, BorderLayout.NORTH);
+        frame.add(new JScrollPane(baseboardInfoArea), BorderLayout.CENTER);
+        frame.add(new JScrollPane(cpuInfoArea), BorderLayout.SOUTH);
+
+        // Make the frame visible
+        frame.setVisible(true);
+    }
+
+    private static String executeWmicCommand(String command) {
+        StringBuilder output = new StringBuilder();
+        try {
+            Process process = Runtime.getRuntime().exec(command);
+            BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+            String line;
+            while ((line = reader.readLine()) != null) {
+                output.append(line).append("\n");
+            }
+            reader.close();
+        } catch (Exception e) {
+            output.append("Error executing command: ").append(command).append("\n").append(e.getMessage());
+        }
+        return output.toString();
+    }
+}
